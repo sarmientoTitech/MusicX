@@ -5,7 +5,7 @@ WORKDIR /pes
 
 # COPY NECESSARY FILES TO RUN SERVICE
 COPY package.json .
-COPY packages/common/package.js packages/common/
+COPY packages/common/package.json packages/common/
 COPY packages/api/package.json packages/api
 
 #SEVICE BUILDING INSTRUCTIONS
