@@ -1,0 +1,62 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - "-t"
+      - "musicx-api:latest"
+      - "-f"
+      - "docker/api.Dockerfile"
+      - .
+    id: Build
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - tag
+      - "musicx-api"
+      - "gcr.io/sarmiento-musicx/musicx-api:latest"
+    id: Tag (1)
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - tag
+      - "musicx-api"
+      - "gcr.io/sarmiento-musicx/musicx-api:$COMMIT_SHA"
+    id: Tag (2)
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - "gcr.io/sarmiento-musicx/musicx-api:latest"
+    id: Push (1)
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - "gcr.io/sarmiento-musicx/musicx-api:$COMMIT_SHA"
+    id: Push (2)
+  - name: gcr.io/sarmiento-musicx/helm
+    args:
+      - upgrade
+      - musicx-api
+      - ./helm/musicx-api
+      - "--install"
+      - "--namespace"
+      - "musicx-services"
+      - "--values"
+      - "./helm/musicx-api/values.yaml"
+      - "--set"
+      - "image.tag=$COMMIT_SHA"
+      - "--set"
+      - "env.NODE_ENV=$_NODE_ENV"
+      - "--set"
+      - "env.MONGO_URI=$_MONGO_URI"
+
+    env:
+      - CLOUDSDK_COMPUTE_ZONE=$_CLOUDSDK_COMPUTE_ZONE
+      - CLOUDSDK_CONTAINER_CLUSTER=$_CLOUDSDK_CONTAINER_CLUSTER
+    id: Deploy
+
+images:
+  - "gcr.io/pestalozzi-onlinecoaching/musicx-api:latest"
+  - "gcr.io/pestalozzi-onlinecoaching/musicx-api:$COMMIT_SHA"
+options:
+  substitutionOption: ALLOW_LOOSE
+tags:
+  - gcp-cloud-build-deploy
+  - musicx-api
